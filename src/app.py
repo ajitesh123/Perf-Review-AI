@@ -18,12 +18,12 @@ def get_completion(prompt, API_KEY, model="gpt-4"):
     print(response.choices[0].message.content)
     return response.choices[0].message.content
 
-def generate_review(your_role, candidate_role, your_review, your_openai_key):
+def generate_review(your_role, candidate_role, your_review, user_questions, your_openai_key):
     prompt = generate_prompt(your_role, candidate_role, your_review)
     response = get_completion(prompt, your_openai_key)
     return response
 
-def generate_prompt(your_role, candidate_role, your_review):
+def generate_prompt(your_role, candidate_role, your_review, user_questions):
     delimiter = "####"
     prompt = f"""
     I’m {your_role}. You’re an expert at writing performance reviews. On my behalf, help answer the question for performance reviews below.
@@ -39,9 +39,7 @@ def generate_prompt(your_role, candidate_role, your_review):
     </context>
 
     <question for performance>
-    - Describe example(s) of the topics selected. What was the context? What actions did they take?
-    - In your opinion, what impact did their actions have?
-    - What recommendations do you have for their growth and development? Your feedback can be about any area of their work.
+    " + '\n'.join(user_questions) + "
     </question for performance>
 
     {delimiter} Output in markdown format in following structure:{delimiter}
@@ -64,6 +62,6 @@ candidate_role = st.text_input('Candidate Role')
 your_review = st.text_area('Briefly describe your experience of working with the candidate including project, responsibility of candidate, unique things they did etc., in free flow writing')
 
 if st.button('Write Review'):
-    review = generate_review(your_role, candidate_role, your_review, your_openai_key)
+    review = generate_review(your_role, candidate_role, your_review, ['Sample question 1', 'Sample question 2'], your_openai_key)
     st.markdown(review)
 2
