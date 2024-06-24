@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from review import ReviewRequest, generate_review
 from self_review import SelfReviewRequest, generate_self_review
+import speech_recognition as sr
+import io
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -25,6 +27,32 @@ async def api_generate_review(request: ReviewRequest):
             request.model_size
         )
         return {"review": review}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate_review_voice")
+async def api_generate_review_voice(
+    audio_file: UploadFile = File(...),
+    your_role: str = "",
+    candidate_role: str = "",
+    perf_question: str = "",
+    llm_type: str = "openai",
+    user_api_key: str = None,
+    model_size: str = "large"
+):
+    try:
+        audio_content = await audio_file.read()
+        recognizer = sr.Recognizer()
+
+        with sr.AudioFile(io.BytesIO(audio_content)) as source:
+            audio_data = recognizer.record(source)
+            your_review = recognizer.recognize_google(audio_data)
+
+        review = generate_review(
+            your_role, candidate_role, perf_question, your_review,
+            llm_type, user_api_key, model_size, input_type="voice"
+        )
+        return {"review": review, "transcription": your_review}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

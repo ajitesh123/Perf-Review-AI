@@ -8,8 +8,11 @@ DEFAULT_QUESTIONS = """
 - What recommendations do you have for their growth and development? Your feedback can be about any area of their work.
 """
 
-def get_completion(prompt, llm, model_size):
-    response = llm.generate_text(prompt, model=model_size)
+def get_completion(prompt, llm, model_size, input_type="text"):
+    if input_type == "voice":
+        # For voice input, the prompt is already processed and converted to text
+        # in the api_generate_review_voice function
+        pass
     return response
 
 def create_llm_instance(llm_type, user_api_key):
@@ -56,11 +59,11 @@ def generate_prompt(your_role, candidate_role, perf_question, your_review):
     Answer: """
     return prompt
 
-def generate_review(your_role, candidate_role, perf_question, your_review, llm_type, user_api_key, model_size):
+def generate_review(your_role, candidate_role, perf_question, your_review, llm_type, user_api_key, model_size, input_type="text"):
     perf_question = perf_question or DEFAULT_QUESTIONS
     prompt = generate_prompt(your_role, candidate_role, perf_question, your_review)
     llm = create_llm_instance(llm_type, user_api_key)
-    response = get_completion(prompt, llm, model_size)
+    response = get_completion(prompt, llm, model_size, input_type)
     return response
 
 # Streamlit UI
