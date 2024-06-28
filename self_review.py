@@ -1,17 +1,19 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+from fastapi import UploadFile
 import re
 from llm import OpenAILLM, GoogleLLM, AnthropicLLM, GroqLLM
 
 class SelfReviewRequest(BaseModel):
-    text_dump: str
+    text_dump: Optional[str] = None
+    audio_dump: Optional[UploadFile] = None
     questions: List[str]
     instructions: Optional[str] = None
     llm_type: str
     user_api_key: str
     model_size: str = "medium"
 
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 def create_llm_instance(llm_type, user_api_key):
     llm_classes = {

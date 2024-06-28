@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, List, Dict
+from fastapi import UploadFile
 import re
 from llm import OpenAILLM, GoogleLLM, AnthropicLLM, GroqLLM
 
@@ -12,13 +13,14 @@ DEFAULT_QUESTIONS = """
 class ReviewRequest(BaseModel):
     your_role: str
     candidate_role: str
-    perf_question: Optional[str] = None
-    your_review: str
+    perf_question: str
+    your_review: Optional[str] = None
+    audio_review: Optional[UploadFile] = None
     llm_type: str
     user_api_key: str
-    model_size: str = "small"
+    model_size: str = "medium"
 
-    model_config = ConfigDict(protected_namespaces=())
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 def get_completion(prompt, llm, model_size):
     response = llm.generate_text(prompt, model=model_size)
