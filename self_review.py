@@ -1,4 +1,7 @@
+from fastapi import UploadFile
 from pydantic import BaseModel, ConfigDict
+import speech_recognition as sr
+from io import BytesIO
 from typing import List, Dict, Optional
 import re
 from llm import OpenAILLM, GoogleLLM, AnthropicLLM, GroqLLM
@@ -10,6 +13,7 @@ class SelfReviewRequest(BaseModel):
     llm_type: str
     user_api_key: str
     model_size: str = "medium"
+    audio_input: Optional[UploadFile] = None
 
     model_config = ConfigDict(protected_namespaces=())
 
@@ -74,7 +78,22 @@ def parse_self_review_response(response: str) -> List[Dict[str, str]]:
     
     return result
 
-def generate_self_review(text_dump: str, questions: List[str], instructions: Optional[str], llm_type: str, user_api_key: str, model_size: str) -> List[Dict[str, str]]:
+def generate_self_review(text_dump: str, questions: List[str], instructions: Optional[str], llm_type: str, user_api_key: str, model_size: str, audio_input: Optional[UploadFile] = None) -> List[Dict[str, str]]:
+    if audio_input:
+        try:
+            # Convert audio to text
+            recognizer = sr.Recognizer()
+            audio_data = audio_input.file.read()
+            with sr.AudioFile(BytesIO(audio_data)) as source:
+                audio = recognizer.record(source)
+            text_dump = recognizer.recognize_google(audio)
+        except sr.UnknownValueError:
+            raise ValueError("Speech recognition could not understand the audio")
+        except sr.RequestError as e:
+            raise ValueError(f"Could not request results from speech recognition service; {str(e)}")
+        except Exception as e:
+            raise ValueError(f"An error occurred during speech-to-text conversion: {str(e)}")
+
     prompt = generate_self_review_prompt(text_dump, questions, instructions)
     llm = create_llm_instance(llm_type, user_api_key)
     response = llm.generate_text(prompt, model=model_size)
