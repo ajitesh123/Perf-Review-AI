@@ -75,3 +75,5 @@ yarl==1.9.4
 groq==0.5.0
 google-generativeai
 anthropic==0.25.8
+streamlit-audiorec
+groq

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from typing import Optional, List, Dict
 import re
 from llm import OpenAILLM, GoogleLLM, AnthropicLLM, GroqLLM
@@ -14,11 +14,10 @@ class ReviewRequest(BaseModel):
     candidate_role: str
     perf_question: Optional[str] = None
     your_review: str
+    audio_review: Optional[str] = None
     llm_type: str
     user_api_key: str
     model_size: str = "small"
-
-    model_config = ConfigDict(protected_namespaces=())
 
 def get_completion(prompt, llm, model_size):
     response = llm.generate_text(prompt, model=model_size)
@@ -38,7 +37,7 @@ def create_llm_instance(llm_type, user_api_key):
     
     return llm_class(api_key=user_api_key)
 
-def generate_prompt(your_role, candidate_role, perf_question, your_review):
+def generate_prompt(your_role, candidate_role, perf_question, your_review, audio_review):
     delimiter = "####"
     prompt = f"""
     I'm {your_role}. You're an expert at writing performance reviews. On my behalf, help answer the question for performance reviews below.
@@ -48,9 +47,14 @@ def generate_prompt(your_role, candidate_role, perf_question, your_review):
     - Keep the role of the person I'm reviewing, {candidate_role}, in mind when writing the review
     - Use simple language and keep it to the point
     - Strictly answer the questions mentioned in "question for performance"
+    - Consider both the written review and the audio review (if provided) when generating the response
 
     <context>
+    Written review:
     {your_review}
+
+    Audio review:
+    {audio_review or "No audio review provided"}
     </context>
 
     <question for performance>
@@ -89,9 +93,9 @@ def parse_llm_response(response: str) -> List[Dict[str, str]]:
     
     return result
 
-def generate_review(your_role, candidate_role, perf_question, your_review, llm_type, user_api_key, model_size):
+def generate_review(your_role, candidate_role, perf_question, your_review, audio_review, llm_type, user_api_key, model_size):
     perf_question = perf_question or DEFAULT_QUESTIONS
-    prompt = generate_prompt(your_role, candidate_role, perf_question, your_review)
+    prompt = generate_prompt(your_role, candidate_role, perf_question, your_review, audio_review)
     llm = create_llm_instance(llm_type, user_api_key)
     response = get_completion(prompt, llm, model_size)
     return parse_llm_response(response)

@@ -20,6 +20,7 @@ async def api_generate_review(request: ReviewRequest):
             request.candidate_role,
             request.perf_question,
             request.your_review,
+            request.audio_review,
             request.llm_type,
             request.user_api_key,
             request.model_size
@@ -33,6 +34,7 @@ async def api_generate_self_review(request: SelfReviewRequest):
     try:
         review = generate_self_review(
             request.text_dump,
+            request.audio_review,
             request.questions,
             request.instructions,
             request.llm_type,
