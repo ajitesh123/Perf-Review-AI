@@ -20,4 +20,4 @@ async def root():
     return {"message": "Welcome to the Performance Review API"}
 
 # To run this server, use the following command in the terminal:
-# uvicorn app_fastapi:app --host 0.0.0.0 --port 8000
+# uvicorn backend.app_fastapi:app --host 0.0.0.0 --port 8000
