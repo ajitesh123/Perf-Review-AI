@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, status
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, status, Response
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
@@ -6,6 +6,7 @@ from typing import List, Optional
 from backend.llm import GroqLLM
 from backend.orchestrator import generate_review, generate_self_review, transcribe_audio
 from backend.kindle_auth import kinde_client, CONFIG, kinde_configuration
+from loguru import logger
 
 v2 = FastAPI()
 
@@ -84,11 +85,19 @@ async def register():
 @v2.get("/callback")
 async def callback(code: str, state: str):
     try:
+        logger.info(f"Callback called with code: {code} and state: {state}")
         kinde_client.fetch_token(authorization_response=f"{CONFIG['kinde']['callback_url']}?code={code}&state={state}")
         # Redirect to a success page or dashboard
-        print(f"Access token: {kinde_configuration.access_token}")  
+        logger.info(f"Access token: {kinde_configuration.access_token}")
+        logger.info(f"User details: {kinde_client.get_user_details()}")
+        logger.info("Now redirecting to /dashboard")
+        return RedirectResponse(url="/v2/dashboard")  
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
+    
+@v2.get("/dashboard")
+async def dashboard(current_user: dict = Depends(get_current_user)):
+    return {"message": "Dashboard", "user": current_user}
 
 @v2.get("/logout")
 async def logout():
@@ -102,3 +111,16 @@ async def get_user(current_user: dict = Depends(get_current_user)):
 @v2.get("/is_authenticated")
 async def is_authenticated():
     return {"is_authenticated": kinde_client.is_authenticated()}
+
+
+"""
+1. Test the root endpoint:
+curl http://localhost:8003/v2/
+{"message":"Welcome to the Performance Review API v2"}
+
+2. curl http://localhost:8003/v2/ping
+{"status":"pong"}
+
+3. curl http://localhost:8003/v2/login
+{"login_url":"https://archieai.kinde.com/oauth2/auth?response_type=code&client_id=9d67b8780d5e452d8340797f2d2ea8c3&redirect_uri=http%3A%2F%2Flocalhost%3A8003%2Fcallback&scope=openid+profile+email+offline&state=MVEKXbieIS5lOXyU3BliQq3Q776DJU"}%
+"""
