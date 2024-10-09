@@ -90,8 +90,9 @@ async def callback(code: str, state: str):
         # Redirect to a success page or dashboard
         logger.info(f"Access token: {kinde_configuration.access_token}")
         logger.info(f"User details: {kinde_client.get_user_details()}")
-        logger.info("Now redirecting to /dashboard")
-        return RedirectResponse(url="/v2/dashboard")  
+        # logger.info("Now redirecting to /dashboard")
+        # return RedirectResponse(url="/v2/dashboard")
+        return {"message": "Callback successful"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
     
