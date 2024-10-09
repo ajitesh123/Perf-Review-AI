@@ -115,6 +115,18 @@ async def is_authenticated():
 
 
 """
+Some other useful settings from Kindle Dashboard:
+- To use own signup/login screen: go to "Details" and select "user your own signup/login screen"
+- Make sure prod callback urls and logout urls are set in Details
+- To not use email and code: we can switch off from "Authentication" tab
+
+TODO: 
+- Integerate with Supabase to store # of use of API per users and whether paid or not
+- Figure out what API to called to put user details from Kindle to Supabase
+- Integeration with Stripe - should we handle in backend or frontend?
+
+
+To test the API:
 1. Test the root endpoint:
 curl http://localhost:8003/v2/
 {"message":"Welcome to the Performance Review API v2"}
